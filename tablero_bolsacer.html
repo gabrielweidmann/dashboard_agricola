@@ -1,0 +1,1351 @@
+<!DOCTYPE html>
+<html lang="es">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>Tablero de Comando — BOLSACER / FCEco UNER</title>
+<script src="https://cdnjs.cloudflare.com/ajax/libs/Chart.js/4.4.1/chart.umd.min.js"></script>
+<link href="https://fonts.googleapis.com/css2?family=Playfair+Display:wght@400;700;900&family=IBM+Plex+Mono:wght@400;600&family=IBM+Plex+Sans:wght@300;400;500;600&display=swap" rel="stylesheet">
+<style>
+  :root {
+    --bg: #0d1117;
+    --surface: #161b22;
+    --surface2: #1c2330;
+    --border: #30363d;
+    --gold: #d4a843;
+    --gold-light: #f0c060;
+    --wheat: #e8c97a;
+    --green: #3fb950;
+    --blue: #58a6ff;
+    --orange: #f0883e;
+    --red: #ff7b72;
+    --text: #e6edf3;
+    --text-muted: #8b949e;
+    --text-dim: #6e7681;
+    --trigo: #f0c060;
+    --maiz: #f0883e;
+    --soja: #3fb950;
+    --arroz: #58a6ff;
+  }
+
+  * { margin: 0; padding: 0; box-sizing: border-box; }
+
+  body {
+    font-family: 'IBM Plex Sans', sans-serif;
+    background: var(--bg);
+    color: var(--text);
+    min-height: 100vh;
+    overflow-x: hidden;
+  }
+
+  /* ─── HEADER ─── */
+  header {
+    background: var(--surface);
+    border-bottom: 2px solid var(--gold);
+    padding: 0;
+    position: sticky;
+    top: 0;
+    z-index: 100;
+  }
+
+  .header-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 16px 32px;
+    display: flex;
+    align-items: center;
+    justify-content: space-between;
+  }
+
+  .logo-block { display: flex; align-items: center; gap: 16px; }
+  .logo-icon {
+    width: 44px; height: 44px;
+    background: var(--gold);
+    border-radius: 4px;
+    display: flex; align-items: center; justify-content: center;
+    font-size: 22px;
+  }
+
+  .logo-text h1 {
+    font-family: 'Playfair Display', serif;
+    font-size: 20px;
+    font-weight: 700;
+    color: var(--gold-light);
+    letter-spacing: 0.3px;
+  }
+
+  .logo-text p {
+    font-size: 11px;
+    color: var(--text-muted);
+    font-family: 'IBM Plex Mono', monospace;
+    letter-spacing: 1px;
+    text-transform: uppercase;
+  }
+
+  .header-meta {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-dim);
+    text-align: right;
+  }
+
+  .header-meta span {
+    display: block;
+    color: var(--gold);
+    font-size: 13px;
+    font-weight: 600;
+  }
+
+  /* ─── NAV ─── */
+  nav {
+    background: var(--bg);
+    border-bottom: 1px solid var(--border);
+  }
+
+  .nav-inner {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 0 32px;
+    display: flex;
+    gap: 0;
+    overflow-x: auto;
+  }
+
+  .nav-btn {
+    padding: 12px 20px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    background: none;
+    border: none;
+    border-bottom: 2px solid transparent;
+    cursor: pointer;
+    transition: all 0.2s;
+    white-space: nowrap;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+
+  .nav-btn:hover { color: var(--text); border-bottom-color: var(--border); }
+  .nav-btn.active { color: var(--gold); border-bottom-color: var(--gold); }
+
+  /* ─── MAIN ─── */
+  main {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 32px;
+  }
+
+  /* ─── SECTIONS ─── */
+  .section {
+    display: none;
+    animation: fadeIn 0.3s ease;
+  }
+
+  .section.active { display: block; }
+
+  @keyframes fadeIn {
+    from { opacity: 0; transform: translateY(8px); }
+    to { opacity: 1; transform: translateY(0); }
+  }
+
+  /* ─── SECTION HEADER ─── */
+  .section-header {
+    display: flex;
+    align-items: flex-end;
+    justify-content: space-between;
+    margin-bottom: 28px;
+    padding-bottom: 16px;
+    border-bottom: 1px solid var(--border);
+  }
+
+  .section-title {
+    font-family: 'Playfair Display', serif;
+    font-size: 28px;
+    font-weight: 700;
+    color: var(--text);
+    line-height: 1.1;
+  }
+
+  .section-title span {
+    display: block;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--gold);
+    text-transform: uppercase;
+    letter-spacing: 1.5px;
+    margin-bottom: 4px;
+    font-weight: 400;
+  }
+
+  .section-note {
+    font-size: 12px;
+    color: var(--text-dim);
+    font-family: 'IBM Plex Mono', monospace;
+    text-align: right;
+  }
+
+  /* ─── KPI CARDS ─── */
+  .kpi-grid {
+    display: grid;
+    grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+    gap: 16px;
+    margin-bottom: 32px;
+  }
+
+  .kpi-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px;
+    position: relative;
+    overflow: hidden;
+    transition: border-color 0.2s;
+  }
+
+  .kpi-card::before {
+    content: '';
+    position: absolute;
+    top: 0; left: 0; right: 0;
+    height: 3px;
+  }
+
+  .kpi-card.trigo::before { background: var(--trigo); }
+  .kpi-card.maiz::before { background: var(--maiz); }
+  .kpi-card.soja::before { background: var(--soja); }
+  .kpi-card.arroz::before { background: var(--arroz); }
+  .kpi-card.soja2::before { background: #a371f7; }
+
+  .kpi-label {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--text-dim);
+    margin-bottom: 8px;
+  }
+
+  .kpi-value {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 22px;
+    font-weight: 600;
+    color: var(--text);
+    line-height: 1;
+    margin-bottom: 8px;
+  }
+
+  .kpi-change {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 12px;
+    font-weight: 600;
+    display: flex;
+    align-items: center;
+    gap: 4px;
+  }
+
+  .kpi-change.up { color: var(--green); }
+  .kpi-change.down { color: var(--red); }
+  .kpi-change.neutral { color: var(--text-muted); }
+
+  .kpi-sub {
+    font-size: 10px;
+    color: var(--text-dim);
+    margin-top: 4px;
+    font-family: 'IBM Plex Mono', monospace;
+  }
+
+  /* ─── CHART CONTAINERS ─── */
+  .chart-grid-2 {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 24px;
+  }
+
+  .chart-grid-full {
+    margin-bottom: 24px;
+  }
+
+  .chart-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+  }
+
+  .chart-title {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    text-transform: uppercase;
+    letter-spacing: 1px;
+    color: var(--text-muted);
+    margin-bottom: 4px;
+  }
+
+  .chart-subtitle {
+    font-size: 16px;
+    font-weight: 600;
+    color: var(--text);
+    margin-bottom: 20px;
+  }
+
+  .chart-wrap {
+    position: relative;
+    height: 260px;
+  }
+
+  .chart-wrap-tall {
+    position: relative;
+    height: 300px;
+  }
+
+  /* ─── LEGEND ─── */
+  .legend {
+    display: flex;
+    flex-wrap: wrap;
+    gap: 16px;
+    margin-top: 16px;
+    padding-top: 12px;
+    border-top: 1px solid var(--border);
+  }
+
+  .legend-item {
+    display: flex;
+    align-items: center;
+    gap: 6px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+  }
+
+  .legend-dot {
+    width: 10px; height: 10px;
+    border-radius: 50%;
+    flex-shrink: 0;
+  }
+
+  /* ─── RESUMEN / SUMMARY SECTION ─── */
+  .summary-grid {
+    display: grid;
+    grid-template-columns: 1fr 1fr;
+    gap: 20px;
+    margin-bottom: 28px;
+  }
+
+  .summary-card {
+    background: var(--surface);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 24px;
+  }
+
+  .summary-card h3 {
+    font-family: 'Playfair Display', serif;
+    font-size: 16px;
+    color: var(--gold-light);
+    margin-bottom: 16px;
+    display: flex;
+    align-items: center;
+    gap: 8px;
+  }
+
+  .summary-card p {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.7;
+    margin-bottom: 10px;
+  }
+
+  .trend-row {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    padding: 10px 0;
+    border-bottom: 1px solid var(--border);
+    font-size: 13px;
+  }
+
+  .trend-row:last-child { border-bottom: none; }
+  .trend-label { color: var(--text-muted); }
+  .trend-val { font-family: 'IBM Plex Mono', monospace; font-weight: 600; }
+
+  .badge {
+    display: inline-flex;
+    align-items: center;
+    gap: 4px;
+    padding: 2px 8px;
+    border-radius: 12px;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    font-weight: 600;
+  }
+
+  .badge.up { background: rgba(63,185,80,0.15); color: var(--green); }
+  .badge.down { background: rgba(255,123,114,0.15); color: var(--red); }
+  .badge.neutral { background: rgba(139,148,158,0.15); color: var(--text-muted); }
+
+  .alert-box {
+    background: rgba(212,168,67,0.08);
+    border: 1px solid rgba(212,168,67,0.3);
+    border-left: 4px solid var(--gold);
+    border-radius: 6px;
+    padding: 14px 18px;
+    margin-top: 16px;
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.6;
+  }
+
+  .alert-box strong { color: var(--gold-light); }
+
+  /* ─── COMMODITY FILTER ─── */
+  .filter-row {
+    display: flex;
+    gap: 8px;
+    margin-bottom: 20px;
+    flex-wrap: wrap;
+  }
+
+  .filter-btn {
+    padding: 6px 14px;
+    border-radius: 20px;
+    border: 1px solid var(--border);
+    background: none;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 11px;
+    color: var(--text-muted);
+    cursor: pointer;
+    transition: all 0.2s;
+    text-transform: uppercase;
+    letter-spacing: 0.8px;
+  }
+
+  .filter-btn:hover { border-color: var(--text-muted); color: var(--text); }
+  .filter-btn.active-trigo { border-color: var(--trigo); color: var(--trigo); background: rgba(240,192,96,0.08); }
+  .filter-btn.active-maiz { border-color: var(--maiz); color: var(--maiz); background: rgba(240,136,62,0.08); }
+  .filter-btn.active-soja { border-color: var(--soja); color: var(--soja); background: rgba(63,185,80,0.08); }
+  .filter-btn.active-arroz { border-color: var(--arroz); color: var(--arroz); background: rgba(88,166,255,0.08); }
+  .filter-btn.active-all { border-color: var(--gold); color: var(--gold); background: rgba(212,168,67,0.08); }
+
+  /* ─── INTERPRETIVE TEXT ─── */
+  .interp-block {
+    background: var(--surface2);
+    border: 1px solid var(--border);
+    border-radius: 8px;
+    padding: 20px 24px;
+    margin-top: 20px;
+  }
+
+  .interp-block h4 {
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    text-transform: uppercase;
+    letter-spacing: 1.2px;
+    color: var(--gold);
+    margin-bottom: 10px;
+  }
+
+  .interp-block p {
+    font-size: 13px;
+    color: var(--text-muted);
+    line-height: 1.7;
+  }
+
+  /* ─── RESPONSIVE ─── */
+  @media (max-width: 900px) {
+    .chart-grid-2 { grid-template-columns: 1fr; }
+    .summary-grid { grid-template-columns: 1fr; }
+    .kpi-grid { grid-template-columns: repeat(2, 1fr); }
+    main { padding: 16px; }
+    .header-inner { padding: 12px 16px; }
+    .section-title { font-size: 22px; }
+  }
+
+  /* ─── FOOTER ─── */
+  footer {
+    max-width: 1400px;
+    margin: 0 auto;
+    padding: 24px 32px;
+    border-top: 1px solid var(--border);
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    font-family: 'IBM Plex Mono', monospace;
+    font-size: 10px;
+    color: var(--text-dim);
+  }
+</style>
+</head>
+<body>
+
+<header>
+  <div class="header-inner">
+    <div class="logo-block">
+      <div class="logo-icon">🌾</div>
+      <div class="logo-text">
+        <h1>Monitor de Precios e Insumo-Producto</h1>
+        <p>Bolsa de Cereales de Entre Ríos · FCEco UNER</p>
+      </div>
+    </div>
+    <div class="header-meta">
+      <span id="last-period-header">—</span>
+      Último período disponible
+    </div>
+  </div>
+</header>
+
+<nav>
+  <div class="nav-inner">
+    <button class="nav-btn active" onclick="showSection('resumen', this)">01 · Resumen</button>
+    <button class="nav-btn" onclick="showSection('pizarra', this)">02 · Precios Pizarra</button>
+    <button class="nav-btn" onclick="showSection('costos', this)">03 · Costos en USD/ha</button>
+    <button class="nav-btn" onclick="showSection('rindes', this)">04 · Rinde de Indiferencia</button>
+    <button class="nav-btn" onclick="showSection('rip', this)">05 · Relación Insumo-Producto</button>
+  </div>
+</nav>
+
+<main>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- 01 RESUMEN                                     -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div id="section-resumen" class="section active">
+    <div class="section-header">
+      <div class="section-title">
+        <span>01 · Situación General</span>
+        Resumen de Tendencias
+      </div>
+      <div class="section-note" id="resumen-fecha">—</div>
+    </div>
+
+    <div id="resumen-texto" style="max-width:860px; line-height:1.85; font-size:15px; color:var(--text-muted);">
+      Cargando...
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- 02 PRECIOS PIZARRA                             -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div id="section-pizarra" class="section">
+    <div class="section-header">
+      <div class="section-title">
+        <span>02 · Mercado Disponible</span>
+        Precios Pizarra en Pesos
+      </div>
+      <div class="section-note">$/tonelada · Precio disponible mensual</div>
+    </div>
+
+    <div class="kpi-grid" id="kpi-pizarra"></div>
+
+    <div class="chart-grid-full chart-card">
+      <div class="chart-title">Evolución Histórica</div>
+      <div class="chart-subtitle">Precio pizarra mensual ($/tn)</div>
+      <div class="filter-row" id="filter-pizarra"></div>
+      <div class="chart-wrap-tall">
+        <canvas id="chart-pizarra-nivel"></canvas>
+      </div>
+      <div class="legend" id="legend-pizarra"></div>
+    </div>
+
+    <div class="chart-grid-2" style="margin-top:20px">
+      <div class="chart-card">
+        <div class="chart-title">Variación Interanual</div>
+        <div class="chart-subtitle">Tasa a/a (%)</div>
+        <div class="chart-wrap">
+          <canvas id="chart-pizarra-yoy"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Variación Mensual</div>
+        <div class="chart-subtitle">Tasa m/m (%)</div>
+        <div class="chart-wrap">
+          <canvas id="chart-pizarra-mom"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="interp-block">
+      <h4>📊 Nota de interpretación</h4>
+      <p id="pizarra-interp">Los precios pizarra reflejan el precio disponible en el mercado de referencia, expresado en pesos por tonelada. Las variaciones interanuales permiten aislar el componente inflacionario de la dinámica de precios relativos.</p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- 03 COSTOS USD/HA                               -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div id="section-costos" class="section">
+    <div class="section-header">
+      <div class="section-title">
+        <span>03 · Estructura de Costos</span>
+        Costos en USD por Hectárea
+      </div>
+      <div class="section-note">Base 100 = Enero 2023</div>
+    </div>
+
+    <div class="kpi-grid" id="kpi-costos"></div>
+
+    <div class="chart-grid-2">
+      <div class="chart-card">
+        <div class="chart-title">Índice de Costos</div>
+        <div class="chart-subtitle">Base 100 = Ene-2023</div>
+        <div class="chart-wrap-tall">
+          <canvas id="chart-costos-idx"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Costo Absoluto (USD/ha)</div>
+        <div class="chart-subtitle">Dólares por hectárea</div>
+        <div class="chart-wrap-tall">
+          <canvas id="chart-costos-abs"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="chart-grid-2" style="margin-top:20px">
+      <div class="chart-card">
+        <div class="chart-title">Variación Interanual del Índice</div>
+        <div class="chart-subtitle">Tasa a/a (%)</div>
+        <div class="chart-wrap">
+          <canvas id="chart-costos-yoy"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Variación Interanual — USD/ha</div>
+        <div class="chart-subtitle">Tasa a/a (%)</div>
+        <div class="chart-wrap">
+          <canvas id="chart-costos-yoy-abs"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="interp-block">
+      <h4>📊 Nota de interpretación</h4>
+      <p>Los costos en dólares por hectárea capturan la estructura real de costos del productor agrícola, aislando el efecto del tipo de cambio. Una caída en el índice implica abaratamiento relativo de los insumos en moneda dura.</p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- 04 RINDE DE INDIFERENCIA                       -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div id="section-rindes" class="section">
+    <div class="section-header">
+      <div class="section-title">
+        <span>04 · Umbral de Rentabilidad</span>
+        Rinde de Indiferencia
+      </div>
+      <div class="section-note">tn/ha · Producción mínima para cubrir costos</div>
+    </div>
+
+    <div class="kpi-grid" id="kpi-rindes"></div>
+
+    <div class="chart-grid-full chart-card">
+      <div class="chart-title">Evolución del Rinde de Indiferencia</div>
+      <div class="chart-subtitle">Toneladas por hectárea necesarias para cubrir costos totales</div>
+      <div class="chart-wrap-tall">
+        <canvas id="chart-rindes-nivel"></canvas>
+      </div>
+      <div class="legend" id="legend-rindes"></div>
+    </div>
+
+    <div class="chart-grid-2" style="margin-top:20px">
+      <div class="chart-card">
+        <div class="chart-title">Variación Interanual</div>
+        <div class="chart-subtitle">Tasa a/a (%)</div>
+        <div class="chart-wrap">
+          <canvas id="chart-rindes-yoy"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Variación Mensual</div>
+        <div class="chart-subtitle">Tasa m/m (%)</div>
+        <div class="chart-wrap">
+          <canvas id="chart-rindes-mom"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="interp-block">
+      <h4>📊 Nota de interpretación</h4>
+      <p>El rinde de indiferencia es la producción mínima necesaria para que el productor cubra sus costos totales. Un valor creciente indica deterioro de la ecuación económica: se requiere mayor rendimiento para alcanzar el punto de equilibrio.</p>
+    </div>
+  </div>
+
+  <!-- ══════════════════════════════════════════════ -->
+  <!-- 05 RELACION INSUMO-PRODUCTO                    -->
+  <!-- ══════════════════════════════════════════════ -->
+  <div id="section-rip" class="section">
+    <div class="section-header">
+      <div class="section-title">
+        <span>05 · Competitividad</span>
+        Relación Insumo-Producto
+      </div>
+      <div class="section-note">kg de grano necesarios para pagar 1 unidad de insumo</div>
+    </div>
+
+    <div class="kpi-grid" id="kpi-rip"></div>
+
+    <div class="chart-grid-full chart-card">
+      <div class="chart-title">Evolución de la Relación Insumo-Producto</div>
+      <div class="chart-subtitle">Litros o kg de insumo equivalentes por kg de producto</div>
+      <div class="chart-wrap-tall">
+        <canvas id="chart-rip-nivel"></canvas>
+      </div>
+      <div class="legend" id="legend-rip"></div>
+    </div>
+
+    <div class="chart-grid-2" style="margin-top:20px">
+      <div class="chart-card">
+        <div class="chart-title">Variación Interanual</div>
+        <div class="chart-subtitle">Tasa a/a (%)</div>
+        <div class="chart-wrap">
+          <canvas id="chart-rip-yoy"></canvas>
+        </div>
+      </div>
+      <div class="chart-card">
+        <div class="chart-title">Variación Mensual</div>
+        <div class="chart-subtitle">Tasa m/m (%)</div>
+        <div class="chart-wrap">
+          <canvas id="chart-rip-mom"></canvas>
+        </div>
+      </div>
+    </div>
+
+    <div class="interp-block">
+      <h4>📊 Nota de interpretación</h4>
+      <p>La relación insumo-producto expresa cuántos kg de cereal se necesitan para adquirir una unidad de insumo (gasoil o urea). Un aumento implica que los insumos se encarecen respecto al producto: deterioro de la competitividad del productor primario.</p>
+    </div>
+  </div>
+
+</main>
+
+<footer>
+  <span>Fuente: BOLSACER · FCEco UNER · Elaboración propia</span>
+  <span>Monitor PCI-ER — v2025</span>
+</footer>
+
+<script>
+// ════════════════════════════════════════════════════════
+// DATA
+// ════════════════════════════════════════════════════════
+const DATA = {
+  pizarra: [{"periodo":"2023-01","trigo":56500.0,"maiz":47283.0,"soja":83000.0,"arroz":51500.0},{"periodo":"2023-02","trigo":57600.0,"maiz":49899.0,"soja":89000.0,"arroz":55000.0},{"periodo":"2023-03","trigo":58202.0,"maiz":50778.0,"soja":88283.0,"arroz":64000.0},{"periodo":"2023-04","trigo":59110.0,"maiz":51093.0,"soja":100311.0,"arroz":64000.0},{"periodo":"2023-05","trigo":67833.0,"maiz":48534.0,"soja":103475.0,"arroz":85000.0},{"periodo":"2023-06","trigo":73344.0,"maiz":48603.0,"soja":91000.0,"arroz":95000.0},{"periodo":"2023-07","trigo":72913.0,"maiz":51905.0,"soja":99750.0,"arroz":115000.0},{"periodo":"2023-08","trigo":84000.0,"maiz":62022.0,"soja":123413.0,"arroz":135000.0},{"periodo":"2023-09","trigo":85500.0,"maiz":68238.0,"soja":160500.0,"arroz":160000.0},{"periodo":"2023-10","trigo":110667.0,"maiz":85310.0,"soja":172967.0,"arroz":210000.0},{"periodo":"2023-11","trigo":114300.0,"maiz":101145.0,"soja":206700.0,"arroz":280000.0},{"periodo":"2023-12","trigo":179267.0,"maiz":149592.0,"soja":253733.0,"arroz":360000.0},{"periodo":"2024-01","trigo":180784.0,"maiz":155464.0,"soja":270841.0,"arroz":430000.0},{"periodo":"2024-02","trigo":176358.0,"maiz":144989.0,"soja":251661.0,"arroz":430000.0},{"periodo":"2024-03","trigo":170689.0,"maiz":147226.0,"soja":252150.0,"arroz":350000.0},{"periodo":"2024-04","trigo":187279.0,"maiz":152600.0,"soja":249890.0,"arroz":350000.0},{"periodo":"2024-05","trigo":231091.0,"maiz":160895.0,"soja":274395.0,"arroz":380000.0},{"periodo":"2024-06","trigo":228744.0,"maiz":162582.0,"soja":285882.0,"arroz":410000.0},{"periodo":"2024-07","trigo":228736.0,"maiz":155148.0,"soja":285705.0,"arroz":410000.0},{"periodo":"2024-08","trigo":230619.0,"maiz":160982.0,"soja":288832.0,"arroz":400000.0},{"periodo":"2024-09","trigo":209846.0,"maiz":169286.0,"soja":298471.0,"arroz":400000.0},{"periodo":"2024-10","trigo":205306.0,"maiz":179786.0,"soja":307064.0,"arroz":380000.0},{"periodo":"2024-11","trigo":191170.0,"maiz":183265.0,"soja":300760.0,"arroz":350000.0},{"periodo":"2024-12","trigo":195468.0,"maiz":183859.0,"soja":289006.0,"arroz":300000.0},{"periodo":"2025-01","trigo":200400.0,"maiz":205625.0,"soja":295470.0,"arroz":250000.0},{"periodo":"2025-02","trigo":220160.0,"maiz":217930.0,"soja":325665.0,"arroz":240000.0},{"periodo":"2025-03","trigo":227694.0,"maiz":208606.0,"soja":329111.0,"arroz":250000.0},{"periodo":"2025-04","trigo":237347.0,"maiz":224000.0,"soja":314395.0,"arroz":230000.0},{"periodo":"2025-05","trigo":226760.0,"maiz":210400.0,"soja":310600.0,"arroz":230000.0},{"periodo":"2025-06","trigo":233868.0,"maiz":202842.0,"soja":322047.0,"arroz":200000.0},{"periodo":"2025-07","trigo":251143.0,"maiz":216625.0,"soja":336381.0,"arroz":200000.0},{"periodo":"2025-08","trigo":267086.0,"maiz":231450.0,"soja":389640.0,"arroz":200000.0},{"periodo":"2025-09","trigo":274852.0,"maiz":250783.0,"soja":436877.0,"arroz":225000.0},{"periodo":"2025-10","trigo":265096.0,"maiz":254920.0,"soja":482886.0,"arroz":225000.0},{"periodo":"2025-11","trigo":250349.0,"maiz":262010.0,"soja":485167.0,"arroz":225000.0},{"periodo":"2025-12","trigo":248539.0,"maiz":275384.0,"soja":495684.0,"arroz":245000.0},{"periodo":"2026-01","trigo":257401.0,"maiz":278655.0,"soja":489506.0,"arroz":250000.0},{"periodo":"2026-02","trigo":253203.0,"maiz":253156.0,"soja":466250.0,"arroz":270000.0},{"periodo":"2026-03","trigo":254404.0,"maiz":243570.0,"soja":466150.0,"arroz":250000.0},{"periodo":"2026-04","trigo":261273.0,"maiz":252573.0,"soja":433542.0,"arroz":250000.0}],
+  costos: [{"periodo":"2023-01","trigo_usd":459.43,"maiz_usd":578.91,"soja1_usd":319.13,"soja2_usd":270.53,"idx_trigo":100.0,"idx_maiz":100.0,"idx_soja1":100.0,"idx_soja2":100.0},{"periodo":"2023-02","trigo_usd":438.94,"maiz_usd":559.42,"soja1_usd":311.3,"soja2_usd":265.7,"idx_trigo":95.54,"idx_maiz":96.63,"idx_soja1":97.55,"idx_soja2":98.21},{"periodo":"2023-03","trigo_usd":436.73,"maiz_usd":559.17,"soja1_usd":306.7,"soja2_usd":269.01,"idx_trigo":95.06,"idx_maiz":96.59,"idx_soja1":96.11,"idx_soja2":99.44},{"periodo":"2023-04","trigo_usd":413.36,"maiz_usd":534.76,"soja1_usd":292.02,"soja2_usd":257.52,"idx_trigo":89.97,"idx_maiz":92.37,"idx_soja1":91.51,"idx_soja2":95.19},{"periodo":"2023-05","trigo_usd":447.26,"maiz_usd":572.35,"soja1_usd":293.52,"soja2_usd":255.42,"idx_trigo":97.35,"idx_maiz":98.87,"idx_soja1":91.98,"idx_soja2":94.41},{"periodo":"2023-06","trigo_usd":438.15,"maiz_usd":560.8,"soja1_usd":285.38,"soja2_usd":249.18,"idx_trigo":95.37,"idx_maiz":96.87,"idx_soja1":89.42,"idx_soja2":92.11},{"periodo":"2023-07","trigo_usd":430.78,"maiz_usd":554.89,"soja1_usd":283.75,"soja2_usd":249.76,"idx_trigo":93.76,"idx_maiz":95.85,"idx_soja1":88.91,"idx_soja2":92.32},{"periodo":"2023-08","trigo_usd":476.31,"maiz_usd":598.14,"soja1_usd":291.05,"soja2_usd":254.85,"idx_trigo":103.67,"idx_maiz":103.32,"idx_soja1":91.2,"idx_soja2":94.2},{"periodo":"2023-09","trigo_usd":472.18,"maiz_usd":592.76,"soja1_usd":281.36,"soja2_usd":244.36,"idx_trigo":102.78,"idx_maiz":102.39,"idx_soja1":88.16,"idx_soja2":90.33},{"periodo":"2023-10","trigo_usd":490.54,"maiz_usd":597.28,"soja1_usd":293.5,"soja2_usd":254.8,"idx_trigo":106.77,"idx_maiz":103.17,"idx_soja1":91.97,"idx_soja2":94.19},{"periodo":"2023-11","trigo_usd":502.2,"maiz_usd":601.8,"soja1_usd":309.4,"soja2_usd":266.2,"idx_trigo":109.31,"idx_maiz":103.95,"idx_soja1":96.95,"idx_soja2":98.4},{"periodo":"2023-12","trigo_usd":516.6,"maiz_usd":612.9,"soja1_usd":316.5,"soja2_usd":268.8,"idx_trigo":112.44,"idx_maiz":105.87,"idx_soja1":99.18,"idx_soja2":99.36},{"periodo":"2024-01","trigo_usd":502.7,"maiz_usd":625.2,"soja1_usd":279.6,"soja2_usd":239.5,"idx_trigo":109.42,"idx_maiz":107.99,"idx_soja1":87.61,"idx_soja2":88.53},{"periodo":"2024-02","trigo_usd":475.7,"maiz_usd":612.6,"soja1_usd":285.5,"soja2_usd":244.9,"idx_trigo":103.54,"idx_maiz":105.82,"idx_soja1":89.46,"idx_soja2":90.53},{"periodo":"2024-03","trigo_usd":463.5,"maiz_usd":584.0,"soja1_usd":284.1,"soja2_usd":242.8,"idx_trigo":100.89,"idx_maiz":100.88,"idx_soja1":89.02,"idx_soja2":89.75},{"periodo":"2024-04","trigo_usd":410.6,"maiz_usd":575.9,"soja1_usd":275.8,"soja2_usd":238.7,"idx_trigo":89.37,"idx_maiz":99.48,"idx_soja1":86.42,"idx_soja2":88.23},{"periodo":"2024-05","trigo_usd":399.5,"maiz_usd":540.6,"soja1_usd":283.7,"soja2_usd":245.2,"idx_trigo":86.96,"idx_maiz":93.38,"idx_soja1":88.9,"idx_soja2":90.64},{"periodo":"2024-06","trigo_usd":395.9,"maiz_usd":527.7,"soja1_usd":281.3,"soja2_usd":244.4,"idx_trigo":86.17,"idx_maiz":91.15,"idx_soja1":88.15,"idx_soja2":90.34},{"periodo":"2024-07","trigo_usd":395.0,"maiz_usd":525.5,"soja1_usd":284.7,"soja2_usd":247.2,"idx_trigo":85.98,"idx_maiz":90.77,"idx_soja1":89.21,"idx_soja2":91.38},{"periodo":"2024-08","trigo_usd":403.9,"maiz_usd":531.9,"soja1_usd":284.3,"soja2_usd":252.4,"idx_trigo":87.91,"idx_maiz":91.88,"idx_soja1":89.09,"idx_soja2":93.3},{"periodo":"2024-09","trigo_usd":401.9,"maiz_usd":531.2,"soja1_usd":284.4,"soja2_usd":248.2,"idx_trigo":87.48,"idx_maiz":91.76,"idx_soja1":89.12,"idx_soja2":91.75},{"periodo":"2024-10","trigo_usd":395.3,"maiz_usd":523.3,"soja1_usd":281.8,"soja2_usd":245.5,"idx_trigo":86.04,"idx_maiz":90.39,"idx_soja1":88.3,"idx_soja2":90.75},{"periodo":"2024-11","trigo_usd":395.8,"maiz_usd":516.8,"soja1_usd":280.4,"soja2_usd":238.1,"idx_trigo":86.15,"idx_maiz":89.27,"idx_soja1":87.86,"idx_soja2":88.01},{"periodo":"2024-12","trigo_usd":392.1,"maiz_usd":515.15,"soja1_usd":278.6,"soja2_usd":236.8,"idx_trigo":85.34,"idx_maiz":88.99,"idx_soja1":87.3,"idx_soja2":87.53},{"periodo":"2025-01","trigo_usd":384.6,"maiz_usd":512.1,"soja1_usd":275.5,"soja2_usd":236.7,"idx_trigo":83.71,"idx_maiz":88.46,"idx_soja1":86.33,"idx_soja2":87.49},{"periodo":"2025-02","trigo_usd":400.7,"maiz_usd":503.2,"soja1_usd":274.5,"soja2_usd":236.3,"idx_trigo":87.22,"idx_maiz":86.92,"idx_soja1":86.02,"idx_soja2":87.35},{"periodo":"2025-03","trigo_usd":391.81,"maiz_usd":506.85,"soja1_usd":277.2,"soja2_usd":238.4,"idx_trigo":85.28,"idx_maiz":87.55,"idx_soja1":86.86,"idx_soja2":88.12},{"periodo":"2025-04","trigo_usd":386.7,"maiz_usd":500.9,"soja1_usd":275.4,"soja2_usd":241.2,"idx_trigo":84.17,"idx_maiz":86.52,"idx_soja1":86.3,"idx_soja2":89.16},{"periodo":"2025-05","trigo_usd":393.94,"maiz_usd":507.4,"soja1_usd":270.6,"soja2_usd":236.3,"idx_trigo":85.75,"idx_maiz":87.65,"idx_soja1":84.79,"idx_soja2":87.35},{"periodo":"2025-06","trigo_usd":399.5,"maiz_usd":508.5,"soja1_usd":280.3,"soja2_usd":243.4,"idx_trigo":86.96,"idx_maiz":87.84,"idx_soja1":87.83,"idx_soja2":89.97},{"periodo":"2025-07","trigo_usd":414.43,"maiz_usd":515.7,"soja1_usd":282.67,"soja2_usd":243.87,"idx_trigo":90.21,"idx_maiz":89.08,"idx_soja1":88.58,"idx_soja2":90.15},{"periodo":"2025-08","trigo_usd":408.92,"maiz_usd":513.07,"soja1_usd":272.25,"soja2_usd":234.85,"idx_trigo":89.01,"idx_maiz":88.63,"idx_soja1":85.31,"idx_soja2":86.81},{"periodo":"2025-09","trigo_usd":418.54,"maiz_usd":538.04,"soja1_usd":275.49,"soja2_usd":236.19,"idx_trigo":91.1,"idx_maiz":92.94,"idx_soja1":86.33,"idx_soja2":87.31},{"periodo":"2025-10","trigo_usd":404.54,"maiz_usd":523.23,"soja1_usd":271.69,"soja2_usd":232.99,"idx_trigo":88.05,"idx_maiz":90.38,"idx_soja1":85.13,"idx_soja2":86.12},{"periodo":"2025-11","trigo_usd":400.69,"maiz_usd":516.86,"soja1_usd":269.66,"soja2_usd":230.96,"idx_trigo":87.21,"idx_maiz":89.28,"idx_soja1":84.5,"idx_soja2":85.37},{"periodo":"2025-12","trigo_usd":400.19,"maiz_usd":506.79,"soja1_usd":274.53,"soja2_usd":234.13,"idx_trigo":87.11,"idx_maiz":87.54,"idx_soja1":86.02,"idx_soja2":86.54},{"periodo":"2026-01","trigo_usd":395.8,"maiz_usd":512.89,"soja1_usd":274.65,"soja2_usd":234.35,"idx_trigo":86.15,"idx_maiz":88.6,"idx_soja1":86.06,"idx_soja2":86.63},{"periodo":"2026-02","trigo_usd":402.94,"maiz_usd":519.31,"soja1_usd":276.79,"soja2_usd":236.39,"idx_trigo":87.7,"idx_maiz":89.71,"idx_soja1":86.73,"idx_soja2":87.38},{"periodo":"2026-03","trigo_usd":409.03,"maiz_usd":525.22,"soja1_usd":282.82,"soja2_usd":241.22,"idx_trigo":89.03,"idx_maiz":90.73,"idx_soja1":88.62,"idx_soja2":89.17},{"periodo":"2026-04","trigo_usd":473.47,"maiz_usd":585.16,"soja1_usd":297.91,"soja2_usd":249.31,"idx_trigo":103.06,"idx_maiz":101.08,"idx_soja1":93.35,"idx_soja2":92.16},{"periodo":"2026-05","trigo_usd":488.96,"maiz_usd":602.06,"soja1_usd":302.7,"soja2_usd":252.4,"idx_trigo":106.43,"idx_maiz":104.0,"idx_soja1":94.85,"idx_soja2":93.3}],
+  rindes: [{"periodo":"2023-01","trigo":1.4819,"maiz":2.2313,"soja":0.7007},{"periodo":"2023-02","trigo":1.4623,"maiz":2.1513,"soja":0.6712},{"periodo":"2023-03","trigo":1.524,"maiz":2.2366,"soja":0.7056},{"periodo":"2023-04","trigo":1.5144,"maiz":2.2666,"soja":0.6304},{"periodo":"2023-05","trigo":1.5244,"maiz":2.7264,"soja":0.6558},{"periodo":"2023-06","trigo":1.4861,"maiz":2.8703,"soja":0.7801},{"periodo":"2023-07","trigo":1.5743,"maiz":2.8486,"soja":0.758},{"periodo":"2023-08","trigo":1.8266,"maiz":3.1067,"soja":0.7597},{"periodo":"2023-09","trigo":1.9329,"maiz":3.0403,"soja":0.6136},{"periodo":"2023-10","trigo":1.5515,"maiz":2.4506,"soja":0.5939},{"periodo":"2023-11","trigo":1.5547,"maiz":2.1053,"soja":0.5296},{"periodo":"2023-12","trigo":1.8501,"maiz":2.6303,"soja":0.8008},{"periodo":"2024-01","trigo":2.2755,"maiz":3.291,"soja":0.8448},{"periodo":"2024-02","trigo":2.2521,"maiz":3.5276,"soja":0.9472},{"periodo":"2024-03","trigo":2.3091,"maiz":3.373,"soja":0.9581},{"periodo":"2024-04","trigo":1.9051,"maiz":3.2794,"soja":0.9591},{"periodo":"2024-05","trigo":1.5332,"maiz":2.9798,"soja":0.9169},{"periodo":"2024-06","trigo":1.5642,"maiz":2.9334,"soja":0.8893},{"periodo":"2024-07","trigo":1.5952,"maiz":3.1289,"soja":0.9205},{"periodo":"2024-08","trigo":1.6514,"maiz":3.1155,"soja":0.9281},{"periodo":"2024-09","trigo":1.8421,"maiz":3.0181,"soja":0.9165},{"periodo":"2024-10","trigo":1.8899,"maiz":2.857,"soja":0.9008},{"periodo":"2024-11","trigo":2.0742,"maiz":2.8251,"soja":0.934},{"periodo":"2024-12","trigo":2.0475,"maiz":2.8599,"soja":0.984},{"periodo":"2025-01","trigo":2.0028,"maiz":2.599,"soja":0.973},{"periodo":"2025-02","trigo":1.9264,"maiz":2.444,"soja":0.8922},{"periodo":"2025-03","trigo":1.8396,"maiz":2.5974,"soja":0.9004},{"periodo":"2025-04","trigo":1.8273,"maiz":2.508,"soja":0.9825},{"periodo":"2025-05","trigo":1.9936,"maiz":2.7674,"soja":0.9997},{"periodo":"2025-06","trigo":2.018,"maiz":2.9615,"soja":1.0282},{"periodo":"2025-07","trigo":2.0908,"maiz":3.0163,"soja":1.0647},{"periodo":"2025-08","trigo":2.0356,"maiz":2.9473,"soja":0.929},{"periodo":"2025-09","trigo":2.1317,"maiz":3.0034,"soja":0.8828},{"periodo":"2025-10","trigo":2.1853,"maiz":2.9393,"soja":0.8057},{"periodo":"2025-11","trigo":2.2849,"maiz":2.8162,"soja":0.7935},{"periodo":"2025-12","trigo":2.3313,"maiz":2.6645,"soja":0.8019},{"periodo":"2026-01","trigo":2.2286,"maiz":2.6677,"soja":0.8132},{"periodo":"2026-02","trigo":2.2433,"maiz":2.8917,"soja":0.8368},{"periodo":"2026-03","trigo":2.245,"maiz":3.011,"soja":0.8472},{"periodo":"2026-04","trigo":2.5034,"maiz":3.2005,"soja":0.9493}],
+  rip: [{"periodo":"2023-01","trigo_gasoil":4.9896,"trigo_urea":1.4315,"maiz_gasoil":5.9623,"soja_gasoil":3.3966},{"periodo":"2023-02","trigo_gasoil":5.1475,"trigo_urea":1.191,"maiz_gasoil":5.942,"soja_gasoil":3.3314},{"periodo":"2023-03","trigo_gasoil":5.2735,"trigo_urea":1.094,"maiz_gasoil":6.0445,"soja_gasoil":3.4766},{"periodo":"2023-04","trigo_gasoil":5.3185,"trigo_urea":1.1482,"maiz_gasoil":6.153,"soja_gasoil":3.134},{"periodo":"2023-05","trigo_gasoil":4.7979,"trigo_urea":1.1223,"maiz_gasoil":6.7058,"soja_gasoil":3.1453},{"periodo":"2023-06","trigo_gasoil":4.5741,"trigo_urea":0.9751,"maiz_gasoil":6.9025,"soja_gasoil":3.6866},{"periodo":"2023-07","trigo_gasoil":4.8671,"trigo_urea":1.2228,"maiz_gasoil":6.8369,"soja_gasoil":3.5576},{"periodo":"2023-08","trigo_gasoil":4.8178,"trigo_urea":1.4787,"maiz_gasoil":6.5251,"soja_gasoil":3.2792},{"periodo":"2023-09","trigo_gasoil":5.2968,"trigo_urea":1.5555,"maiz_gasoil":6.6367,"soja_gasoil":2.8217},{"periodo":"2023-10","trigo_gasoil":7.5065,"trigo_urea":1.9427,"maiz_gasoil":7.9624,"soja_gasoil":3.7785},{"periodo":"2023-11","trigo_gasoil":7.8437,"trigo_urea":2.0578,"maiz_gasoil":8.7456,"soja_gasoil":4.2397},{"periodo":"2023-12","trigo_gasoil":7.4249,"trigo_urea":1.9965,"maiz_gasoil":8.9987,"soja_gasoil":5.3699},{"periodo":"2024-01","trigo_gasoil":7.6375,"trigo_urea":2.4043,"maiz_gasoil":9.8706,"soja_gasoil":6.0882},{"periodo":"2024-02","trigo_gasoil":7.3249,"trigo_urea":2.6303,"maiz_gasoil":9.5523,"soja_gasoil":6.032},{"periodo":"2024-03","trigo_gasoil":6.9491,"trigo_urea":2.5441,"maiz_gasoil":8.9428,"soja_gasoil":5.5498},{"periodo":"2024-04","trigo_gasoil":6.9516,"trigo_urea":2.6219,"maiz_gasoil":8.0696,"soja_gasoil":4.7461},{"periodo":"2024-05","trigo_gasoil":7.2434,"trigo_urea":2.7898,"maiz_gasoil":8.4617,"soja_gasoil":5.4397},{"periodo":"2024-06","trigo_gasoil":7.5827,"trigo_urea":2.7413,"maiz_gasoil":8.7063,"soja_gasoil":5.8007},{"periodo":"2024-07","trigo_gasoil":7.8174,"trigo_urea":2.7958,"maiz_gasoil":8.5748,"soja_gasoil":6.1167},{"periodo":"2024-08","trigo_gasoil":7.6777,"trigo_urea":2.5625,"maiz_gasoil":8.2892,"soja_gasoil":5.9091},{"periodo":"2024-09","trigo_gasoil":7.5867,"trigo_urea":2.4629,"maiz_gasoil":8.2621,"soja_gasoil":5.5921},{"periodo":"2024-10","trigo_gasoil":7.2637,"trigo_urea":2.3699,"maiz_gasoil":8.0469,"soja_gasoil":5.5032},{"periodo":"2024-11","trigo_gasoil":7.2313,"trigo_urea":2.2567,"maiz_gasoil":7.9485,"soja_gasoil":5.5007},{"periodo":"2024-12","trigo_gasoil":7.3609,"trigo_urea":2.3252,"maiz_gasoil":8.3001,"soja_gasoil":5.4584},{"periodo":"2025-01","trigo_gasoil":6.8621,"trigo_urea":2.1965,"maiz_gasoil":8.1547,"soja_gasoil":5.3374},{"periodo":"2025-02","trigo_gasoil":7.2271,"trigo_urea":2.3498,"maiz_gasoil":8.1834,"soja_gasoil":5.7071},{"periodo":"2025-03","trigo_gasoil":6.9836,"trigo_urea":2.252,"maiz_gasoil":8.1047,"soja_gasoil":5.7578},{"periodo":"2025-04","trigo_gasoil":7.2148,"trigo_urea":2.3481,"maiz_gasoil":7.826,"soja_gasoil":5.7168},{"periodo":"2025-05","trigo_gasoil":7.0079,"trigo_urea":2.1803,"maiz_gasoil":7.8451,"soja_gasoil":5.1776},{"periodo":"2025-06","trigo_gasoil":7.0655,"trigo_urea":2.1613,"maiz_gasoil":8.1649,"soja_gasoil":5.5481},{"periodo":"2025-07","trigo_gasoil":7.576,"trigo_urea":2.2701,"maiz_gasoil":8.3591,"soja_gasoil":5.8527},{"periodo":"2025-08","trigo_gasoil":7.8437,"trigo_urea":2.3432,"maiz_gasoil":8.4765,"soja_gasoil":5.7047},{"periodo":"2025-09","trigo_gasoil":7.6765,"trigo_urea":2.1951,"maiz_gasoil":8.3843,"soja_gasoil":5.6671},{"periodo":"2025-10","trigo_gasoil":7.8205,"trigo_urea":2.2524,"maiz_gasoil":8.4827,"soja_gasoil":5.8978},{"periodo":"2025-11","trigo_gasoil":7.8636,"trigo_urea":2.2543,"maiz_gasoil":8.5256,"soja_gasoil":5.8897},{"periodo":"2025-12","trigo_gasoil":7.8439,"trigo_urea":2.2865,"maiz_gasoil":7.9079,"soja_gasoil":5.8726},{"periodo":"2026-01","trigo_gasoil":7.5779,"trigo_urea":2.339,"maiz_gasoil":6.9999,"soja_gasoil":3.9848},{"periodo":"2026-02","trigo_gasoil":7.9499,"trigo_urea":2.6278,"maiz_gasoil":7.9513,"soja_gasoil":4.3173},{"periodo":"2026-03","trigo_gasoil":8.3813,"trigo_urea":3.9826,"maiz_gasoil":8.7541,"soja_gasoil":4.5741},{"periodo":"2026-04","trigo_gasoil":null,"trigo_urea":null,"maiz_gasoil":null,"soja_gasoil":null}]
+};
+
+// ════════════════════════════════════════════════════════
+// COLORS
+// ════════════════════════════════════════════════════════
+const C = {
+  trigo:  '#f0c060',
+  maiz:   '#f0883e',
+  soja:   '#3fb950',
+  arroz:  '#58a6ff',
+  soja2:  '#a371f7',
+  grid:   'rgba(48,54,61,0.8)',
+  zero:   'rgba(139,148,158,0.4)',
+};
+
+// ════════════════════════════════════════════════════════
+// HELPERS
+// ════════════════════════════════════════════════════════
+function fmtPeso(v) {
+  if (v == null) return '—';
+  return '$' + Math.round(v).toLocaleString('es-AR');
+}
+
+function fmtUSD(v) {
+  if (v == null) return '—';
+  return 'USD ' + v.toFixed(0);
+}
+
+function fmtPct(v, decimals=1) {
+  if (v == null) return '—';
+  const sign = v >= 0 ? '+' : '';
+  return sign + v.toFixed(decimals) + '%';
+}
+
+function fmtNum(v, dec=2) {
+  if (v == null) return '—';
+  return v.toFixed(dec);
+}
+
+function calcYoY(arr, key) {
+  // Returns array of {periodo, val} for items that have a match 12 periods earlier
+  return arr.map((item, i) => {
+    if (i < 12) return {periodo: item.periodo, val: null};
+    const prev = arr[i - 12][key];
+    const curr = item[key];
+    if (!prev || !curr) return {periodo: item.periodo, val: null};
+    return {periodo: item.periodo, val: ((curr - prev) / Math.abs(prev)) * 100};
+  });
+}
+
+function calcMoM(arr, key) {
+  return arr.map((item, i) => {
+    if (i < 1) return {periodo: item.periodo, val: null};
+    const prev = arr[i - 1][key];
+    const curr = item[key];
+    if (!prev || !curr) return {periodo: item.periodo, val: null};
+    return {periodo: item.periodo, val: ((curr - prev) / Math.abs(prev)) * 100};
+  });
+}
+
+function lastValid(arr, key) {
+  for (let i = arr.length - 1; i >= 0; i--) {
+    if (arr[i][key] != null) return arr[i][key];
+  }
+  return null;
+}
+
+function lastPeriod(arr) {
+  for (let i = arr.length - 1; i >= 0; i--) {
+    const r = arr[i];
+    const keys = Object.keys(r).filter(k => k !== 'periodo');
+    if (keys.some(k => r[k] != null)) return r.periodo;
+  }
+  return null;
+}
+
+function fmtPeriodo(p) {
+  if (!p) return '—';
+  const [yr, mo] = p.split('-');
+  const meses = ['ene','feb','mar','abr','may','jun','jul','ago','sep','oct','nov','dic'];
+  return meses[parseInt(mo)-1] + '-' + yr;
+}
+
+const chartDefaults = {
+  responsive: true,
+  maintainAspectRatio: false,
+  animation: { duration: 600 },
+  plugins: {
+    legend: { display: false },
+    tooltip: {
+      backgroundColor: '#161b22',
+      borderColor: '#30363d',
+      borderWidth: 1,
+      titleColor: '#8b949e',
+      bodyColor: '#e6edf3',
+      padding: 10,
+      titleFont: { family: "'IBM Plex Mono', monospace", size: 11 },
+      bodyFont: { family: "'IBM Plex Mono', monospace", size: 12 },
+    }
+  },
+  scales: {
+    x: {
+      grid: { color: C.grid, lineWidth: 0.5 },
+      ticks: {
+        color: '#6e7681',
+        font: { family: "'IBM Plex Mono', monospace", size: 9 },
+        maxRotation: 45,
+        autoSkip: true,
+        maxTicksLimit: 18,
+      }
+    },
+    y: {
+      grid: { color: C.grid, lineWidth: 0.5 },
+      ticks: {
+        color: '#6e7681',
+        font: { family: "'IBM Plex Mono', monospace", size: 10 },
+      }
+    }
+  }
+};
+
+function lineDataset(data, label, color, fill=false) {
+  return {
+    label,
+    data,
+    borderColor: color,
+    backgroundColor: fill ? color.replace(')', ',0.12)').replace('rgb', 'rgba') : 'transparent',
+    borderWidth: 2,
+    pointRadius: 2,
+    pointHoverRadius: 5,
+    tension: 0.3,
+    fill,
+    spanGaps: true,
+  };
+}
+
+function barDataset(data, label, colors) {
+  return {
+    label,
+    data,
+    backgroundColor: data.map(v => v == null ? 'transparent' : v >= 0 ? 'rgba(63,185,80,0.7)' : 'rgba(255,123,114,0.7)'),
+    borderColor: data.map(v => v == null ? 'transparent' : v >= 0 ? '#3fb950' : '#ff7b72'),
+    borderWidth: 1,
+    borderRadius: 2,
+    spanGaps: true,
+  };
+}
+
+function makeChart(id, type, labels, datasets, extraOptions={}) {
+  const ctx = document.getElementById(id);
+  if (!ctx) return null;
+  const existing = Chart.getChart(ctx);
+  if (existing) existing.destroy();
+
+  return new Chart(ctx, {
+    type,
+    data: { labels, datasets },
+    options: deepMerge(chartDefaults, extraOptions),
+  });
+}
+
+function deepMerge(a, b) {
+  const out = {...a};
+  for (const k in b) {
+    if (b[k] && typeof b[k] === 'object' && !Array.isArray(b[k])) {
+      out[k] = deepMerge(a[k] || {}, b[k]);
+    } else {
+      out[k] = b[k];
+    }
+  }
+  return out;
+}
+
+// ════════════════════════════════════════════════════════
+// NAV
+// ════════════════════════════════════════════════════════
+function showSection(id, btn) {
+  document.querySelectorAll('.section').forEach(s => s.classList.remove('active'));
+  document.querySelectorAll('.nav-btn').forEach(b => b.classList.remove('active'));
+  document.getElementById('section-' + id).classList.add('active');
+  btn.classList.add('active');
+}
+
+// ════════════════════════════════════════════════════════
+// SECTION: RESUMEN
+// ════════════════════════════════════════════════════════
+function buildResumen() {
+  const lastPiz   = DATA.pizarra[DATA.pizarra.length - 1];
+  const lastPiz12 = DATA.pizarra[DATA.pizarra.length - 13];
+  const lastCost  = DATA.costos[DATA.costos.length - 1];
+  const lastCost12= DATA.costos[DATA.costos.length - 13];
+  const lastRind  = DATA.rindes[DATA.rindes.length - 1];
+  const lastRind12= DATA.rindes[DATA.rindes.length - 13];
+  const ripValid  = DATA.rip.filter(r => r.trigo_gasoil != null);
+  const lastRIP   = ripValid[ripValid.length - 1];
+  const lastRIP12 = ripValid.length >= 13 ? ripValid[ripValid.length - 13] : null;
+
+  document.getElementById('last-period-header').textContent = fmtPeriodo(lastPiz.periodo);
+  document.getElementById('resumen-fecha').textContent = 'Datos al ' + fmtPeriodo(lastPiz.periodo);
+
+  function yoy(curr, prev) {
+    if (!curr || !prev) return null;
+    return ((curr - prev) / Math.abs(prev)) * 100;
+  }
+  function hi(v, color='var(--text)') {
+    return `<strong style="color:${color}">${v}</strong>`;
+  }
+  function pctTag(v) {
+    if (v == null) return '';
+    const col = v >= 0 ? 'var(--green)' : 'var(--red)';
+    const sign = v >= 0 ? '+' : '';
+    return `<strong style="color:${col}">${sign}${v.toFixed(1)}%</strong>`;
+  }
+
+  const trigoYoY  = yoy(lastPiz.trigo,  lastPiz12?.trigo);
+  const maizYoY   = yoy(lastPiz.maiz,   lastPiz12?.maiz);
+  const sojaYoY   = yoy(lastPiz.soja,   lastPiz12?.soja);
+  const arrozYoY  = yoy(lastPiz.arroz,  lastPiz12?.arroz);
+
+  const cIdxT     = lastCost.idx_trigo;
+  const cIdxTyoy  = yoy(lastCost.idx_trigo,  lastCost12?.idx_trigo);
+  const cIdxMyoy  = yoy(lastCost.idx_maiz,   lastCost12?.idx_maiz);
+  const cIdxSyoy  = yoy(lastCost.idx_soja1,  lastCost12?.idx_soja1);
+
+  const riT       = lastRind.trigo;
+  const riM       = lastRind.maiz;
+  const riS       = lastRind.soja;
+  const riTyoy    = yoy(lastRind.trigo, lastRind12?.trigo);
+  const riMyoy    = yoy(lastRind.maiz,  lastRind12?.maiz);
+  const riSyoy    = yoy(lastRind.soja,  lastRind12?.soja);
+
+  const ripTG     = lastRIP?.trigo_gasoil;
+  const ripTGyoy  = yoy(lastRIP?.trigo_gasoil, lastRIP12?.trigo_gasoil);
+  const ripMGyoy  = yoy(lastRIP?.maiz_gasoil,  lastRIP12?.maiz_gasoil);
+  const ripSGyoy  = yoy(lastRIP?.soja_gasoil,  lastRIP12?.soja_gasoil);
+  const ripTUyoy  = yoy(lastRIP?.trigo_urea,   lastRIP12?.trigo_urea);
+
+  const periodoRef = fmtPeriodo(lastPiz.periodo);
+  const periodoBase = fmtPeriodo(lastPiz12?.periodo);
+  const ripPeriodo = fmtPeriodo(lastRIP?.periodo);
+
+  const costDir = parseFloat(cIdxT) < 100 ? 'por debajo' : 'por encima';
+
+  document.getElementById('resumen-texto').innerHTML = `
+    <p style="margin-bottom:1.2em; color:var(--text);">
+      Al período ${hi(periodoRef, 'var(--gold-light)')}, el tablero de comando del Monitor PCI-ER registra las siguientes tendencias principales en los mercados agrícolas de Entre Ríos.
+    </p>
+
+    <p style="margin-bottom:1.2em;">
+      <span style="color:var(--gold-light); font-weight:600;">Precios pizarra.</span>
+      En términos nominales, el trigo se ubica en ${hi(fmtPeso(lastPiz.trigo)+'/tn')} y la soja en ${hi(fmtPeso(lastPiz.soja)+'/tn')}.
+      Respecto a igual período del año anterior (${periodoBase}), el trigo acumula una variación de ${pctTag(trigoYoY)}, el maíz de ${pctTag(maizYoY)}, la soja de ${pctTag(sojaYoY)} y el arroz de ${pctTag(arrozYoY)}.
+      ${sojaYoY != null && trigoYoY != null ? (sojaYoY > trigoYoY ? 'La soja mostró una apreciación relativa mayor al trigo en el período.' : 'El trigo mostró una apreciación relativa mayor a la soja en el período.') : ''}
+    </p>
+
+    <p style="margin-bottom:1.2em;">
+      <span style="color:var(--gold-light); font-weight:600;">Costos en dólares por hectárea.</span>
+      El índice de costos en USD/ha (base 100 = enero 2023) se ubica en ${hi(fmtNum(cIdxT,1), 'var(--blue)')} para trigo,
+      ${costDir} del nivel base.
+      La variación interanual del índice es de ${pctTag(cIdxTyoy)} para trigo, ${pctTag(cIdxMyoy)} para maíz y ${pctTag(cIdxSyoy)} para soja de primera.
+      ${cIdxTyoy != null ? (cIdxTyoy > 0 ? 'El encarecimiento de los insumos en moneda dura presiona la ecuación del productor.' : 'El abaratamiento relativo de los insumos en moneda dura ofrece un alivio a la estructura de costos.') : ''}
+    </p>
+
+    <p style="margin-bottom:1.2em;">
+      <span style="color:var(--gold-light); font-weight:600;">Rinde de indiferencia.</span>
+      El rinde mínimo necesario para cubrir costos totales alcanza ${hi(fmtNum(riT,2)+' tn/ha')} para trigo, ${hi(fmtNum(riM,2)+' tn/ha')} para maíz y ${hi(fmtNum(riS,2)+' tn/ha')} para soja.
+      El maíz continúa siendo el cultivo con mayor exigencia productiva para el punto de equilibrio.
+      Respecto a un año atrás, el rinde de indiferencia varió ${pctTag(riTyoy)} en trigo, ${pctTag(riMyoy)} en maíz y ${pctTag(riSyoy)} en soja.
+      ${riMyoy != null ? (riMyoy > 0 ? 'El aumento del rinde de indiferencia refleja un deterioro de la ecuación económica del productor.' : 'La reducción del rinde de indiferencia indica una mejora en la ecuación económica del productor.') : ''}
+    </p>
+
+    <p style="margin-bottom:0;">
+      <span style="color:var(--gold-light); font-weight:600;">Relación insumo-producto.</span>
+      Al ${hi(ripPeriodo, 'var(--gold-light)')}, se necesitan ${hi(fmtNum(ripTG,2))} kg de trigo para adquirir un litro de gasoil, con una variación interanual de ${pctTag(ripTGyoy)}.
+      Para el maíz, la relación con gasoil varió ${pctTag(ripMGyoy)}, y para la soja ${pctTag(ripSGyoy)}.
+      La relación trigo/urea registró una variación de ${pctTag(ripTUyoy)}.
+      ${ripTGyoy != null ? (ripTGyoy > 0 ? 'El encarecimiento relativo del gasoil respecto al cereal deteriora la competitividad del productor primario.' : 'El abaratamiento relativo del gasoil respecto al cereal mejora la posición competitiva del productor.') : ''}
+    </p>
+  `;
+}
+
+// ════════════════════════════════════════════════════════
+// SECTION: PIZARRA
+// ════════════════════════════════════════════════════════
+let pizarraVisibility = {trigo: true, maiz: true, soja: true, arroz: true};
+let chartPizNivel = null;
+
+function buildPizarra() {
+  const P = DATA.pizarra;
+  const labels = P.map(r => fmtPeriodo(r.periodo));
+  const last = P[P.length - 1];
+  const prev12 = P[P.length - 13];
+
+  // KPI
+  const kpis = [
+    {k:'trigo', label:'Trigo', cls:'trigo'},
+    {k:'maiz', label:'Maíz', cls:'maiz'},
+    {k:'soja', label:'Soja', cls:'soja'},
+    {k:'arroz', label:'Arroz', cls:'arroz'},
+  ];
+  document.getElementById('kpi-pizarra').innerHTML = kpis.map(c => {
+    const curr = last[c.k];
+    const prev = prev12?.[c.k];
+    const yoy = curr && prev ? ((curr-prev)/prev*100) : null;
+    const cls = yoy==null?'neutral':yoy>=0?'up':'down';
+    const arrow = yoy==null?'':yoy>=0?'▲':'▼';
+    return `<div class="kpi-card ${c.cls}">
+      <div class="kpi-label">${c.label}</div>
+      <div class="kpi-value">${fmtPeso(curr)}</div>
+      <div class="kpi-change ${cls}">${arrow} ${fmtPct(yoy)} a/a</div>
+      <div class="kpi-sub">$/tn · ${fmtPeriodo(last.periodo)}</div>
+    </div>`;
+  }).join('');
+
+  // Filter buttons
+  const filterEl = document.getElementById('filter-pizarra');
+  filterEl.innerHTML = ['trigo','maiz','soja','arroz'].map(k =>
+    `<button class="filter-btn active-${k}" onclick="togglePizarra('${k}', this)">${k.charAt(0).toUpperCase()+k.slice(1)}</button>`
+  ).join('');
+
+  // Level chart
+  const datasets = [
+    lineDataset(P.map(r=>r.trigo), 'Trigo', C.trigo),
+    lineDataset(P.map(r=>r.maiz), 'Maíz', C.maiz),
+    lineDataset(P.map(r=>r.soja), 'Soja', C.soja),
+    lineDataset(P.map(r=>r.arroz), 'Arroz', C.arroz),
+  ];
+
+  chartPizNivel = makeChart('chart-pizarra-nivel', 'line', labels, datasets, {
+    plugins: { tooltip: { callbacks: {
+      label: ctx => ` ${ctx.dataset.label}: ${fmtPeso(ctx.raw)}/tn`
+    }}}
+  });
+
+  // Legend
+  const legColors = [C.trigo, C.maiz, C.soja, C.arroz];
+  const legLabels = ['Trigo', 'Maíz', 'Soja', 'Arroz'];
+  document.getElementById('legend-pizarra').innerHTML = legLabels.map((l,i) =>
+    `<div class="legend-item"><div class="legend-dot" style="background:${legColors[i]}"></div>${l}</div>`
+  ).join('');
+
+  // YoY chart
+  const yoyLabels = P.map(r => fmtPeriodo(r.periodo));
+  const yoyTrigo = calcYoY(P, 'trigo').map(r=>r.val);
+  const yoySoja = calcYoY(P, 'soja').map(r=>r.val);
+  const yoyMaiz = calcYoY(P, 'maiz').map(r=>r.val);
+
+  makeChart('chart-pizarra-yoy', 'line', yoyLabels, [
+    lineDataset(yoyTrigo, 'Trigo', C.trigo),
+    lineDataset(yoySoja, 'Soja', C.soja),
+    lineDataset(yoyMaiz, 'Maíz', C.maiz),
+  ], {
+    plugins: { tooltip: { callbacks: {
+      label: ctx => ` ${ctx.dataset.label}: ${fmtPct(ctx.raw)}`
+    }}},
+    scales: { y: { ticks: { callback: v => fmtPct(v) } } }
+  });
+
+  // MoM chart
+  const momTrigo = calcMoM(P, 'trigo').map(r=>r.val);
+  const momSoja = calcMoM(P, 'soja').map(r=>r.val);
+  makeChart('chart-pizarra-mom', 'bar', yoyLabels, [
+    barDataset(momTrigo, 'Trigo'),
+  ], {
+    plugins: { tooltip: { callbacks: {
+      label: ctx => ` ${fmtPct(ctx.raw)}`
+    }}},
+    scales: { y: { ticks: { callback: v => fmtPct(v) } } }
+  });
+}
+
+function togglePizarra(key, btn) {
+  if (!chartPizNivel) return;
+  const keyMap = {trigo:0, maiz:1, soja:2, arroz:3};
+  const idx = keyMap[key];
+  const ds = chartPizNivel.data.datasets[idx];
+  ds.hidden = !ds.hidden;
+  btn.style.opacity = ds.hidden ? '0.35' : '1';
+  chartPizNivel.update();
+}
+
+// ════════════════════════════════════════════════════════
+// SECTION: COSTOS
+// ════════════════════════════════════════════════════════
+function buildCostos() {
+  const C_data = DATA.costos;
+  const labels = C_data.map(r => fmtPeriodo(r.periodo));
+  const last = C_data[C_data.length - 1];
+  const prev12 = C_data[C_data.length - 13];
+
+  // KPIs
+  const kpis = [
+    {k:'idx_trigo', k2:'trigo_usd', label:'Trigo', cls:'trigo'},
+    {k:'idx_maiz', k2:'maiz_usd', label:'Maíz', cls:'maiz'},
+    {k:'idx_soja1', k2:'soja1_usd', label:'Soja 1ra', cls:'soja'},
+    {k:'idx_soja2', k2:'soja2_usd', label:'Soja 2da', cls:'soja2'},
+  ];
+  document.getElementById('kpi-costos').innerHTML = kpis.map(c => {
+    const curr = last[c.k];
+    const prev = prev12?.[c.k];
+    const yoy = curr && prev ? ((curr-prev)/Math.abs(prev)*100) : null;
+    const cls = yoy==null?'neutral':yoy>=0?'up':'down';
+    const arrow = yoy==null?'':yoy>=0?'▲':'▼';
+    return `<div class="kpi-card ${c.cls}">
+      <div class="kpi-label">${c.label} · Índice</div>
+      <div class="kpi-value">${fmtNum(curr,1)}</div>
+      <div class="kpi-change ${cls}">${arrow} ${fmtPct(yoy)} a/a</div>
+      <div class="kpi-sub">Base 100 = Ene-2023 · ${fmtUSD(last[c.k2])}/ha</div>
+    </div>`;
+  }).join('');
+
+  // Index chart
+  makeChart('chart-costos-idx', 'line', labels, [
+    lineDataset(C_data.map(r=>r.idx_trigo), 'Trigo', C.trigo),
+    lineDataset(C_data.map(r=>r.idx_maiz), 'Maíz', C.maiz),
+    lineDataset(C_data.map(r=>r.idx_soja1), 'Soja 1ra', C.soja),
+    lineDataset(C_data.map(r=>r.idx_soja2), 'Soja 2da', '#a371f7'),
+  ], {
+    plugins: { legend: {
+      display: true,
+      labels: { color: '#8b949e', font: { family: "'IBM Plex Mono', monospace", size: 10 }, boxWidth: 10 }
+    }, tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmtNum(ctx.raw,1)}` }}},
+    scales: { y: { ticks: { callback: v => v.toFixed(0) } } }
+  });
+
+  // Absolute USD chart
+  makeChart('chart-costos-abs', 'line', labels, [
+    lineDataset(C_data.map(r=>r.trigo_usd), 'Trigo', C.trigo),
+    lineDataset(C_data.map(r=>r.maiz_usd), 'Maíz', C.maiz),
+    lineDataset(C_data.map(r=>r.soja1_usd), 'Soja 1ra', C.soja),
+    lineDataset(C_data.map(r=>r.soja2_usd), 'Soja 2da', '#a371f7'),
+  ], {
+    plugins: { legend: {
+      display: true,
+      labels: { color: '#8b949e', font: { family: "'IBM Plex Mono', monospace", size: 10 }, boxWidth: 10 }
+    }, tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: USD ${ctx.raw?.toFixed(0)}/ha` }}},
+    scales: { y: { ticks: { callback: v => 'USD '+v.toFixed(0) } } }
+  });
+
+  // YoY index
+  const yoyIdx = calcYoY(C_data, 'idx_trigo').map(r=>r.val);
+  const yoyIdxM = calcYoY(C_data, 'idx_maiz').map(r=>r.val);
+  const yoyIdxS = calcYoY(C_data, 'idx_soja1').map(r=>r.val);
+  makeChart('chart-costos-yoy', 'line', labels, [
+    lineDataset(yoyIdx, 'Trigo', C.trigo),
+    lineDataset(yoyIdxM, 'Maíz', C.maiz),
+    lineDataset(yoyIdxS, 'Soja 1ra', C.soja),
+  ], {
+    plugins: { legend: { display: true, labels: { color: '#8b949e', font: { family: "'IBM Plex Mono', monospace", size: 10 }, boxWidth: 10 }},
+      tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmtPct(ctx.raw)}` }}},
+    scales: { y: { ticks: { callback: v => fmtPct(v) } } }
+  });
+
+  // YoY abs USD
+  const yoyAbs = calcYoY(C_data, 'trigo_usd').map(r=>r.val);
+  const yoyAbsM = calcYoY(C_data, 'maiz_usd').map(r=>r.val);
+  makeChart('chart-costos-yoy-abs', 'line', labels, [
+    lineDataset(yoyAbs, 'Trigo USD/ha', C.trigo),
+    lineDataset(yoyAbsM, 'Maíz USD/ha', C.maiz),
+  ], {
+    plugins: { legend: { display: true, labels: { color: '#8b949e', font: { family: "'IBM Plex Mono', monospace", size: 10 }, boxWidth: 10 }},
+      tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmtPct(ctx.raw)}` }}},
+    scales: { y: { ticks: { callback: v => fmtPct(v) } } }
+  });
+}
+
+// ════════════════════════════════════════════════════════
+// SECTION: RINDES
+// ════════════════════════════════════════════════════════
+function buildRindes() {
+  const R = DATA.rindes;
+  const labels = R.map(r => fmtPeriodo(r.periodo));
+  const last = R[R.length - 1];
+  const prev12 = R[R.length - 13];
+
+  const kpis = [
+    {k:'trigo', label:'Trigo', cls:'trigo'},
+    {k:'maiz', label:'Maíz', cls:'maiz'},
+    {k:'soja', label:'Soja', cls:'soja'},
+  ];
+  document.getElementById('kpi-rindes').innerHTML = kpis.map(c => {
+    const curr = last[c.k];
+    const prev = prev12?.[c.k];
+    const yoy = curr && prev ? ((curr-prev)/Math.abs(prev)*100) : null;
+    const cls = yoy==null?'neutral':yoy>=0?'up':'down';
+    const arrow = yoy==null?'':yoy>=0?'▲':'▼';
+    return `<div class="kpi-card ${c.cls}">
+      <div class="kpi-label">${c.label} · Rinde Indif.</div>
+      <div class="kpi-value">${fmtNum(curr,2)} tn/ha</div>
+      <div class="kpi-change ${cls}">${arrow} ${fmtPct(yoy)} a/a</div>
+      <div class="kpi-sub">Min. para cubrir costos</div>
+    </div>`;
+  }).join('');
+
+  makeChart('chart-rindes-nivel', 'line', labels, [
+    lineDataset(R.map(r=>r.trigo), 'Trigo', C.trigo, false),
+    lineDataset(R.map(r=>r.maiz), 'Maíz', C.maiz, false),
+    lineDataset(R.map(r=>r.soja), 'Soja', C.soja, false),
+  ], {
+    plugins: { tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.raw?.toFixed(2)} tn/ha` }}},
+    scales: { y: { ticks: { callback: v => v.toFixed(2)+' tn/ha' } } }
+  });
+
+  document.getElementById('legend-rindes').innerHTML = [
+    {l:'Trigo', c:C.trigo}, {l:'Maíz', c:C.maiz}, {l:'Soja', c:C.soja}
+  ].map(x => `<div class="legend-item"><div class="legend-dot" style="background:${x.c}"></div>${x.l}</div>`).join('');
+
+  const yoyT = calcYoY(R,'trigo').map(r=>r.val);
+  const yoyM = calcYoY(R,'maiz').map(r=>r.val);
+  const yoyS = calcYoY(R,'soja').map(r=>r.val);
+  makeChart('chart-rindes-yoy', 'line', labels, [
+    lineDataset(yoyT, 'Trigo', C.trigo),
+    lineDataset(yoyM, 'Maíz', C.maiz),
+    lineDataset(yoyS, 'Soja', C.soja),
+  ], {
+    plugins: { legend: { display: true, labels: { color: '#8b949e', font: { family: "'IBM Plex Mono', monospace", size: 10 }, boxWidth: 10 }},
+      tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmtPct(ctx.raw)}` }}},
+    scales: { y: { ticks: { callback: v => fmtPct(v) } } }
+  });
+
+  const momT = calcMoM(R,'trigo').map(r=>r.val);
+  const momM = calcMoM(R,'maiz').map(r=>r.val);
+  const momS = calcMoM(R,'soja').map(r=>r.val);
+  makeChart('chart-rindes-mom', 'line', labels, [
+    lineDataset(momT, 'Trigo', C.trigo),
+    lineDataset(momM, 'Maíz', C.maiz),
+    lineDataset(momS, 'Soja', C.soja),
+  ], {
+    plugins: { legend: { display: true, labels: { color: '#8b949e', font: { family: "'IBM Plex Mono', monospace", size: 10 }, boxWidth: 10 }},
+      tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmtPct(ctx.raw)}` }}},
+    scales: { y: { ticks: { callback: v => fmtPct(v) } } }
+  });
+}
+
+// ════════════════════════════════════════════════════════
+// SECTION: RELACION IP
+// ════════════════════════════════════════════════════════
+function buildRIP() {
+  const RP = DATA.rip.filter(r => r.trigo_gasoil != null);
+  const labels = RP.map(r => fmtPeriodo(r.periodo));
+  const last = RP[RP.length - 1];
+  const prev12 = RP.length >= 13 ? RP[RP.length - 13] : null;
+
+  const kpis = [
+    {k:'trigo_gasoil', label:'Trigo / Gasoil', cls:'trigo'},
+    {k:'trigo_urea', label:'Trigo / Urea', cls:'trigo'},
+    {k:'maiz_gasoil', label:'Maíz / Gasoil', cls:'maiz'},
+    {k:'soja_gasoil', label:'Soja / Gasoil', cls:'soja'},
+  ];
+  document.getElementById('kpi-rip').innerHTML = kpis.map(c => {
+    const curr = last[c.k];
+    const prev = prev12?.[c.k];
+    const yoy = curr && prev ? ((curr-prev)/Math.abs(prev)*100) : null;
+    const cls = yoy==null?'neutral':yoy>=0?'up':'down';
+    const arrow = yoy==null?'':yoy>=0?'▲':'▼';
+    return `<div class="kpi-card ${c.cls}">
+      <div class="kpi-label">${c.label}</div>
+      <div class="kpi-value">${fmtNum(curr,2)}</div>
+      <div class="kpi-change ${cls}">${arrow} ${fmtPct(yoy)} a/a</div>
+      <div class="kpi-sub">Relación de precios</div>
+    </div>`;
+  }).join('');
+
+  makeChart('chart-rip-nivel', 'line', labels, [
+    lineDataset(RP.map(r=>r.trigo_gasoil), 'Trigo/Gasoil', C.trigo),
+    lineDataset(RP.map(r=>r.trigo_urea), 'Trigo/Urea', '#e6b3ff'),
+    lineDataset(RP.map(r=>r.maiz_gasoil), 'Maíz/Gasoil', C.maiz),
+    lineDataset(RP.map(r=>r.soja_gasoil), 'Soja/Gasoil', C.soja),
+  ], {
+    plugins: { legend: { display: true, labels: { color: '#8b949e', font: { family: "'IBM Plex Mono', monospace", size: 10 }, boxWidth: 10 }},
+      tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${ctx.raw?.toFixed(2)}` }}},
+    scales: { y: { ticks: { callback: v => v.toFixed(1) } } }
+  });
+
+  document.getElementById('legend-rip').innerHTML = [
+    {l:'Trigo/Gasoil', c:C.trigo}, {l:'Trigo/Urea', c:'#e6b3ff'},
+    {l:'Maíz/Gasoil', c:C.maiz}, {l:'Soja/Gasoil', c:C.soja}
+  ].map(x => `<div class="legend-item"><div class="legend-dot" style="background:${x.c}"></div>${x.l}</div>`).join('');
+
+  const yoyTG = calcYoY(RP,'trigo_gasoil').map(r=>r.val);
+  const yoyMG = calcYoY(RP,'maiz_gasoil').map(r=>r.val);
+  const yoySG = calcYoY(RP,'soja_gasoil').map(r=>r.val);
+  makeChart('chart-rip-yoy', 'line', labels, [
+    lineDataset(yoyTG, 'Trigo/Gasoil', C.trigo),
+    lineDataset(yoyMG, 'Maíz/Gasoil', C.maiz),
+    lineDataset(yoySG, 'Soja/Gasoil', C.soja),
+  ], {
+    plugins: { legend: { display: true, labels: { color: '#8b949e', font: { family: "'IBM Plex Mono', monospace", size: 10 }, boxWidth: 10 }},
+      tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmtPct(ctx.raw)}` }}},
+    scales: { y: { ticks: { callback: v => fmtPct(v) } } }
+  });
+
+  const momTG = calcMoM(RP,'trigo_gasoil').map(r=>r.val);
+  const momMG = calcMoM(RP,'maiz_gasoil').map(r=>r.val);
+  makeChart('chart-rip-mom', 'line', labels, [
+    lineDataset(momTG, 'Trigo/Gasoil', C.trigo),
+    lineDataset(momMG, 'Maíz/Gasoil', C.maiz),
+  ], {
+    plugins: { legend: { display: true, labels: { color: '#8b949e', font: { family: "'IBM Plex Mono', monospace", size: 10 }, boxWidth: 10 }},
+      tooltip: { callbacks: { label: ctx => ` ${ctx.dataset.label}: ${fmtPct(ctx.raw)}` }}},
+    scales: { y: { ticks: { callback: v => fmtPct(v) } } }
+  });
+}
+
+// ════════════════════════════════════════════════════════
+// INIT
+// ════════════════════════════════════════════════════════
+document.addEventListener('DOMContentLoaded', () => {
+  buildResumen();
+  buildPizarra();
+  buildCostos();
+  buildRindes();
+  buildRIP();
+});
+</script>
+</body>
+</html>
